@@ -1,0 +1,20 @@
+extends layout
+
+block content
+.menu
+  h2 Menu
+  ul.nav.nav-pills
+    li
+      a(href="/") Home
+    li.active
+      a(href="/tasks") Todo List
+    li
+      a(href="/tasks/completed") Completed
+h1= title
+  .list
+    .item.add-task
+div.action
+  form(action="/tasks", method="POST")
+    input(type="hidden", value="true" name="all_done")
+    input(type="hidden", value="locals._csrf", name="_csrf")
+    input(type="submit", class="btn btn-success btn-xs", value="all_done")
