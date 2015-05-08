@@ -1,20 +1,45 @@
 extends layout
 
 block content
-.menu
-  h2 Menu
-  ul.nav.nav-pills
-    li
-      a(href="/") Home
-    li.active
-      a(href="/tasks") Todo List
-    li
-      a(href="/tasks/completed") Completed
-h1= title
-  .list
-    .item.add-task
-div.action
-  form(action="/tasks", method="POST")
-    input(type="hidden", value="true" name="all_done")
-    input(type="hidden", value="locals._csrf", name="_csrf")
-    input(type="submit", class="btn btn-success btn-xs", value="all_done")
+  .menu
+    h2 Menu
+    ul.nav.nav-pills
+      li
+        a(href="/") Home
+      li.active
+        a(href="/tasks") Todo List
+      li
+        a(href="/tasks/completed") Completed
+  h1= title
+    .list
+      .item.add-task
+        div.action
+          form(action="/tasks", method="POST")
+            input(type="hidden", value="true" name="all_done")
+            input(type="hidden", value=locals._csrf, name="_csrf")
+            input(type="submit", class="btn btn-success btn-xs", value="all_done")
+        form(action="/tasks" method="POST")
+          input(type="hidden", value=locals._csrf name="_csrf")
+          div.name
+            input(type="text", name="name", placeholder="Add a new task")
+          div.add
+            input(type="submit", class="btn btn-small btn-info", value="Get this task added")
+          
+  if (tasks.length === 0)
+    | No Task Present Here
+  each task, index in tasks
+    .item
+      div.action
+      form(action="/tasks/#{task._id}", method="POST")
+        input(type="hidden", value=task._id.toString(), name="id")
+        input(type="hidden", value="true", name="completed")
+        input(type="hidden", name="_csrf" value=locals._csrf)
+        input(type="submit" class="btn btn-success btn-xs task-done", value="done")
+      div.num
+        span=index+1
+        |.&nbsp;
+      div.name
+        span.name=task.name
+        //- No Support for DELETE METHOD in forms
+        div.delete
+          a(class="btn btn-danger btn-xs task-delete", data-task-id=task._id.toString(), data-csrf=locals._csrf) delete

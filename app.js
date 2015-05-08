@@ -1,6 +1,5 @@
 var express = require("express");
-
-var routes = require("./routes");
+var routes = require("./routes/index");
 var tasks = require("./routes/tasks");
 
 var http = require("http");
@@ -8,17 +7,20 @@ var path = require("path");
 
 var mongoskin = require("mongoskin");
 
-var db = mongoskin.db("mongodb://localhost:27017?auto_reconnect", {safe: true});
+var db = mongoskin.db("mongodb://localhost:27017/todoApp?auto_reconnect", {safe: true});
 
+var bodyParser = require("body-parser");
 var app = express();
 
 var favicon = require("serve-favicon"),
     logger = require("morgan"),
     methodOverride = require("method-override"),
     cookieParser = require("cookie-parser"),
-    session = require("express-sesison"),
+    session = require("express-session"),
     csrf = require("csurf"),
-    errorHandler = require("errorhandler");
+    errorHandler = require("error-handler");
+
+var serveIndex = require("serve-index");
 
 app.use(function(req, res, next){
   req.db = {};
@@ -31,7 +33,7 @@ app.use(function(req, res, next){
 app.set("views", __dirname + "/views");
 app.set("view engine", "jade");
 
-app.use(favicon(path.join('public','favicon.ico')));
+app.use(favicon(path.join('public','favicon.png')));
 
 app.use(logger('dev'));
 
@@ -52,7 +54,6 @@ app.use(session({
 app.use(csrf());
 app.use(require("less-middleware")(path.join(__dirname, 'public')));
 
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(function(req, res, next){
   res.locals._csrf = req.csrfToken();
@@ -73,26 +74,31 @@ app.param("task_id", function(req, res, next, taskId){
   });
 });
 
+
+
 app.get("/", routes.index);
 app.get("/tasks", tasks.list);
-app.post('/tasks', tasks.markAllCompleted);
+app.post("/tasks", tasks.markAllCompleted);
+app.post('/tasks', tasks.add);
 app.post("/tasks/:task_id", tasks.markCompleted);
-app.del("/tasks/:task_id", tasks.del);
-
+app.delete("/tasks/:task_id", tasks.del);
 app.get("/tasks/completed", tasks.completed);
+
+app.use(express.static(path.join(__dirname, "public")));
+app.use(serveIndex("./public", {}));
 
 
 app.use(function(req, res, next){
   res.status(404).send("NOT FOUND!!!");
 });
 
-if ('development' === app.get('env')){
-  app.use(errorHandler());
-}
-
-http.createServer(app).listen(app.get('port'), function(){
-  console.log("Express server listening on port " + app.get("port"));
+app.use(function(error, req, res, next){
+  if (error){
+    console.error(error);
+  }
 });
 
+
 app.locals.appname = 'Express.js Todo App';
-app.set("port",process.env.PORT || 3000);
+app.set("port", 4000);
+app.listen(app.get("port"));
